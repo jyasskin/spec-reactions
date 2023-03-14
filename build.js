@@ -85,27 +85,37 @@ async function main() {
     }
 
     const [owner, repo] = parts;
-    for await (const issue of iterateIssues(octokit, owner, repo)) {
-      const totalCount = issue.reactions.total_count;
-      if (totalCount >= MIN_REACTION_COUNT) {
-        let recentCount = 0;
-        for await (const reaction of iterateReactions(octokit, owner, repo, issue.number)) {
-          const createdAt = Date.parse(reaction.created_at);
-          if (createdAt > recentSince) {
-            recentCount++;
-          }
-        }
+    try {
+      for await (const issue of iterateIssues(octokit, owner, repo)) {
         const info = {
-          total_count: totalCount,
-          recent_count: recentCount,
+          total_reactions: issue.reactions,
           url: issue.html_url,
           title: issue.title,
         };
+        if (issue.pull_request) {
+          info.pull_request = { draft: issue.pull_request.draft }
+        }
+        if (issue.milestone) {
+          info.milestone = issue.milestone.title;
+        }
+        if (issue.labels.length > 0) {
+          info.labels = issue.labels.map(label => label.name);
+        }
+        if (issue.reactions.total_count >= MIN_REACTION_COUNT) {
+          info.recent_reaction_count = 0;
+          for await (const reaction of iterateReactions(octokit, owner, repo, issue.number)) {
+            const createdAt = Date.parse(reaction.created_at);
+            if (createdAt > recentSince) {
+              info.recent_reaction_count++;
+            }
+          }
+        }
         // Log the issue URL to make it easier to see if the script is stuck.
         console.log(info.url);
         issues.push(info);
-        if (issues.length == 10) break;
       }
+    } catch (error) {
+      console.error("%s error while fetching issues from %s/%s: %o", error.status, owner, repo, error.response);
     }
   }
 
