@@ -1,7 +1,7 @@
-import fs from 'node:fs/promises';
+import { throttling } from '@octokit/plugin-throttling';
+import { Octokit } from '@octokit/rest';
 import specs from 'browser-specs' assert { type: "json" };
-import {Octokit} from '@octokit/rest';
-import {throttling} from '@octokit/plugin-throttling';
+import fs from 'node:fs/promises';
 
 // Minimum number of reactions to consider.
 const MIN_REACTION_COUNT = 10;
@@ -11,12 +11,12 @@ const RECENT_REACTION_DAYS = 90;
 
 async function* iterateIssues(octokit, owner, repo) {
   for await (const response of octokit.paginate.iterator(
-      octokit.rest.issues.listForRepo,
-      {
-        owner,
-        repo,
-        per_page: 100,
-      },
+    octokit.rest.issues.listForRepo,
+    {
+      owner,
+      repo,
+      per_page: 100,
+    },
   )) {
     for (const issue of response.data) {
       yield issue;
@@ -27,12 +27,12 @@ async function* iterateIssues(octokit, owner, repo) {
 async function* iterateReactions(octokit, owner, repo, issue_number) {
   for await (const response of octokit.paginate.iterator(
     octokit.rest.reactions.listForIssue,
-      {
-        owner,
-        repo,
-        issue_number,
-        per_page: 100,
-      },
+    {
+      owner,
+      repo,
+      issue_number,
+      per_page: 100,
+    },
   )) {
     for (const reaction of response.data) {
       yield reaction;
@@ -104,7 +104,7 @@ async function main() {
         // Log the issue URL to make it easier to see if the script is stuck.
         console.log(info.url);
         issues.push(info);
-        if (issues.length == 10)break;
+        if (issues.length == 10) break;
       }
     }
   }
