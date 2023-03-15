@@ -1,8 +1,11 @@
+import { resolve } from 'path';
+import { defineConfig } from 'vite';
 import handlebars from 'vite-plugin-handlebars';
 
 import issues from './issues.json' assert { type: 'json' };
 
-export default {
+export default defineConfig({
+  root: 'site',
   base: './',
   plugins: [
     handlebars({
@@ -24,4 +27,11 @@ export default {
       }
     }),
   ],
-};
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'site/index.html'),
+      },
+    },
+  },
+});
