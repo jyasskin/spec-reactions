@@ -21,8 +21,8 @@
     <tbody class="list">
       {{#each issues}}
         <tr>
-          <td class="total">{{total_count}}</td>
-          <td class="recent">{{recent_count}}</td>
+          <td class="total">{{total_reactions.total_count}}</td>
+          <td class="recent">{{recent_reaction_count}}</td>
           <td class="title"><a href="{{url}}">{{title}}</a> <span>({{pretty url}})</span></td>
         </tr>
       {{/each}}

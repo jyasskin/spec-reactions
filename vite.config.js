@@ -4,6 +4,21 @@ import handlebars from 'vite-plugin-handlebars';
 
 import issues from './issues.json' assert { type: 'json' };
 
+function summarizeLabels(issues) {
+  const result = {};
+  for (const issue of issues) {
+    const {url, labels} = issue;
+    const match = /^https:\/\/github.com\/(?<org>[^/]+])\/(?<repo>[^/]+)\//.exec(url);
+    for (const label of labels) {
+      if (result[label] === undefined) {
+        result[label] = {};
+      }
+      result[label]
+    }
+  }
+  return result;
+}
+
 export default defineConfig({
   root: 'site',
   base: './',
@@ -11,6 +26,7 @@ export default defineConfig({
     handlebars({
       context: {
         issues,
+        labels: summarizeLabels(issues),
         updated: new Date().toISOString().split('T')[0],
       },
       helpers: {
@@ -30,7 +46,8 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'site/index.html'),
+        index: resolve(__dirname, 'site/index.html'),
+        reactions: resolve(__dirname, 'site/reactions.html'),
       },
     },
   },
