@@ -40,6 +40,17 @@ async function* iterateReactions(octokit, owner, repo, issue_number) {
   }
 }
 
+function simplifyReactions(reactions) {
+  const result = {};
+  for (const [key, value] of Object.entries(reactions)) {
+    if (value !== 0) {
+      result[key] = value;
+    }
+  }
+  result.total_count = reactions.total_count;
+  return result;
+}
+
 async function main() {
   const recentSince = Date.now() - (RECENT_REACTION_DAYS * 24 * 3600 * 1000);
 
@@ -85,12 +96,17 @@ async function main() {
     }
 
     const [owner, repo] = parts;
+    // Log the repo to make it easier to see if the script is stuck.
+    console.log(repoURL);
     try {
       for await (const issue of iterateIssues(octokit, owner, repo)) {
         const info = {
-          total_reactions: issue.reactions,
+          total_reactions: simplifyReactions(issue.reactions),
           url: issue.html_url,
           title: issue.title,
+          created_at: issue.created_at,
+          updated_at: issue.updated_at,
+          author_association: issue.author_association,
         };
         if (issue.pull_request) {
           info.pull_request = { draft: issue.pull_request.draft }
@@ -101,7 +117,7 @@ async function main() {
         if (issue.labels.length > 0) {
           info.labels = issue.labels.map(label => label.name);
         }
-        if (issue.reactions.total_count >= MIN_REACTION_COUNT) {
+        if (issue.reactions.total_count >= MIN_REACTION_COUNT && false) {
           info.recent_reaction_count = 0;
           for await (const reaction of iterateReactions(octokit, owner, repo, issue.number)) {
             const createdAt = Date.parse(reaction.created_at);
@@ -110,8 +126,6 @@ async function main() {
             }
           }
         }
-        // Log the issue URL to make it easier to see if the script is stuck.
-        console.log(info.url);
         issues.push(info);
       }
     } catch (error) {
