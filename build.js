@@ -101,7 +101,7 @@ async function main() {
         if (issue.labels.length > 0) {
           info.labels = issue.labels.map(label => label.name);
         }
-        if (issue.reactions.total_count >= MIN_REACTION_COUNT) {
+        if (issue.reactions.total_count >= MIN_REACTION_COUNT && false) {
           info.recent_reaction_count = 0;
           for await (const reaction of iterateReactions(octokit, owner, repo, issue.number)) {
             const createdAt = Date.parse(reaction.created_at);
